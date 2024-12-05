@@ -1,10 +1,12 @@
+import random
+
 import numpy as np
 
 from model.agent import Agent
 from model.customer import Customer
 
 np.random.seed(42)
-
+random.seed(42)
 
 class Service():
     def __init__(self, num_of_agents:int):

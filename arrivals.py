@@ -10,7 +10,7 @@ from model.customer import Customer
 ARRIVAL_RATE = 20/60  # Average arrivals per second
 
 np.random.seed(42)
-
+random.seed(42)
 
 class Arrivals():
     def __init__(self):
@@ -21,19 +21,20 @@ class Arrivals():
         for customer in customers_queue:
             customer.patience_left -= 1
             # remove from customers_queue and add to completed list when patience left is 0
-            if customer.patience_left <= 0:
+            if customer.patience_left < 0:
                 customer.exit_time = current_time
                 customer.abandon = True
                 customers_queue.remove(customer)
                 completed_list.append(customer)
-                
+        
+        num_arrivals = 0
         if current_time == self.next_arrival_time:
             #print("Current time", current_time)
-            self.add_all_arrivals_to_queue(customers_queue=customers_queue, arrival_time=current_time, case=case)
+            customers_queue, num_arrivals = self.add_all_arrivals_to_queue(customers_queue=customers_queue, arrival_time=current_time, case=case, num_arrivals=1)
 
-        return customers_queue, completed_list
+        return customers_queue, completed_list, num_arrivals
     
-    def add_all_arrivals_to_queue(self, customers_queue:list[Customer], arrival_time:int, case:Literal["uniform", "hyperexponential"]):
+    def add_all_arrivals_to_queue(self, customers_queue:list[Customer], arrival_time:int, case:Literal["uniform", "hyperexponential"], num_arrivals):
         customers_queue = self.add_customer_to_queue(customers_queue=customers_queue, arrival_time=arrival_time, case=case)
         interarrival_time = self.generate_interarrival_time()
         self.next_arrival_time += interarrival_time
@@ -41,9 +42,11 @@ class Arrivals():
         #print(interarrival_time)
         
         if interarrival_time == 0:
-            customers_queue = self.add_all_arrivals_to_queue(customers_queue=customers_queue, arrival_time=arrival_time, case=case)
+            num_arrivals += 1
+            customers_queue, num_arrivals = self.add_all_arrivals_to_queue(customers_queue=customers_queue, arrival_time=arrival_time, case=case, num_arrivals=num_arrivals)
+            print(num_arrivals)
 
-        return customers_queue
+        return customers_queue, num_arrivals
     
     def add_customer_to_queue(self, customers_queue:list[Customer], arrival_time:int, case:Literal["uniform", "hyperexponential"]):
         customers_queue.append(Customer(arrival_time=arrival_time, patience_left=self.generate_patience_time(case=case)))
@@ -70,9 +73,10 @@ def demo():
     completed_list = []
     for i in range(1000):
         print("Time period:", i)
-        customers_queue, completed_list = A.update_queue(customers_queue=customers_queue, current_time=i, case="uniform", completed_list=completed_list)
+        customers_queue, completed_list, num_arrivals = A.update_queue(customers_queue=customers_queue, current_time=i, case="uniform", completed_list=completed_list)
         print("Num of customers in queue:", len(customers_queue))
         print("Num of customers completed:", len(completed_list))
+        print("Num of arrivals:", num_arrivals)
         
 if __name__ == "__main__":
     demo()
