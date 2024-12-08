@@ -44,7 +44,7 @@ class Arrivals():
         if interarrival_time == 0:
             num_arrivals += 1
             customers_queue, num_arrivals = self.add_all_arrivals_to_queue(customers_queue=customers_queue, arrival_time=arrival_time, case=case, num_arrivals=num_arrivals)
-            print(num_arrivals)
+            #print(num_arrivals)
 
         return customers_queue, num_arrivals
     

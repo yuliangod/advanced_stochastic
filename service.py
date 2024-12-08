@@ -17,14 +17,14 @@ class Service():
         agents_list = self.clear_agents_who_finished_serving(agents_list=agents_list)
         num_of_available_agents_left = self.num_of_agents - len(agents_list)
         num_of_customers_in_queue = len(customers_queue)
-        print("Num of available agents left:", num_of_available_agents_left)
+        #print("Num of available agents left:", num_of_available_agents_left)
         
         customers_served = min(num_of_available_agents_left, num_of_customers_in_queue)
-        print("Num of customers served:", customers_served)
+        #print("Num of customers served:", customers_served)
 
         completed_customers = customers_queue[:customers_served]
         for customer in completed_customers:
-            print("Exited at", current_time)
+            #print("Exited at", current_time)
             customer.exit_time = current_time
             customer.abandon = False
             completed_list.append(customer)
