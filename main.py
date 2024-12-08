@@ -19,16 +19,16 @@ class AnalyseCycle:
     def find_optimal_agents(self, n:int, min_num_agents:int, max_num_agents:int, case:Literal["uniform", "hyperexponential"],):
         data = []
         for num_agents in tqdm(range(min_num_agents, max_num_agents)):
-            prob_abandon, prob_abandon_ci, avg_wait, avg_wait_ci = self.analyse(n=n, num_of_agents=num_agents, case=case)
-            data.append([num_agents, prob_abandon, prob_abandon_ci, avg_wait, avg_wait_ci])
+            prob_abandon, prob_abandon_ci, avg_wait, avg_wait_ci, num_cycles, full_sim_prob_abandon, full_sim_avg_wait = self.analyse(n=n, num_of_agents=num_agents, case=case)
+            data.append([num_agents, prob_abandon, prob_abandon_ci, avg_wait, avg_wait_ci, num_cycles, full_sim_prob_abandon, full_sim_avg_wait])
         
-        df = pd.DataFrame(data, columns=["No. of agents", "Prob abandon", "Prob abandon CI", "Avg wait", "Avg wait CI"])
+        df = pd.DataFrame(data, columns=["No. of agents", "Prob abandon", "Prob abandon CI", "Avg wait", "Avg wait CI", "No. of cycles", "Full sim prob abandon", "Full sim avg abandon"])
         df.to_csv(f"results_{case}.csv", index=False)
     
     def analyse(self, n:int, num_of_agents:int, case:Literal["uniform", "hyperexponential"],):
         
         df = self.generate_df(n=n, num_of_agents=num_of_agents, case=case)
-        cycles_df = self.generate_cycles_df(df)
+        cycles_df, num_cycles = self.generate_cycles_df(df)
         
         prob_abandon, prob_abandon_ci = self.steady_state_analysis(cycles_df=cycles_df, reward_column="abandon", cycle_length_column="num_completed")
         avg_wait, avg_wait_ci = self.steady_state_analysis(cycles_df=cycles_df, reward_column="total_wait", cycle_length_column="num_completed")
@@ -36,7 +36,10 @@ class AnalyseCycle:
         print(prob_abandon, avg_wait)
         print(prob_abandon_ci, avg_wait_ci)
         
-        return prob_abandon, prob_abandon_ci, avg_wait, avg_wait_ci
+        full_sim_prob_abandon = df["abandon"].sum()/df["num_completed"].sum()
+        full_sim_avg_wait = df["total_wait"].sum()/df["num_completed"].sum()
+        
+        return prob_abandon, prob_abandon_ci, avg_wait, avg_wait_ci, num_cycles, full_sim_prob_abandon, full_sim_avg_wait
         
     
     def generate_df(self, n:int, num_of_agents:int, case:Literal["uniform", "hyperexponential"]):
@@ -121,8 +124,9 @@ class AnalyseCycle:
 
         #cycles_df.to_csv("cycles_df.csv", index=False)
 
-        
-        return cycles_df
+        num_cycles = cycles_df["cycle"].max()
+                
+        return cycles_df, num_cycles
     
     def steady_state_analysis(self, cycles_df:pd.DataFrame, reward_column:str, cycle_length_column:str):
         # remove first cycle as it doesn't start from a "reset" state, remove last cycle as it may not neccessarily be a complete cycle
